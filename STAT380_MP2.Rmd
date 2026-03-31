@@ -1,0 +1,38 @@
+---
+title: "STAT380_MP2"
+author: 
+- name: Isaac Swope
+- name: Andrew Loiselle
+date: "2026-03-31"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Front Matter
+```{r}
+# Libraries
+
+# Functions
+
+# Data
+
+```
+
+
+
+## Task 1
+
+
+## Task 2: Variable Exploration
+
+
+## Task 3: Variable Relations
+
+
+## Task 4
+
+
+## Task 5
