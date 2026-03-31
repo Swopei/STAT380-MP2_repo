@@ -14,11 +14,14 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Front Matter
 ```{r}
 # Libraries
-
+library(readxl)
 # Functions
 
 # Data
-
+games_url <- "https://raw.githubusercontent.com/Swopei/STAT380-MP2_repo/main/Data/CODGames2_mp.xlsx"
+games_tmp <- tempfile(fileext = ".xlsx")
+download.file(games_url, destfile = games_tmp, mode = "wb")
+Games <- read_excel(games_tmp)
 ```
 
 
