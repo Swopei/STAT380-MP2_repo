@@ -21,6 +21,7 @@ library(lubridate)
 library(knitr)
 library(patchwork)
 library(mdsr)
+library(tidyr)
 
 # Functions
 countNA <- function(col){
@@ -195,6 +196,34 @@ ggplot(data = Games,
 As we can see from the visualization, most of the primary weapons have a very similar score with very similar individual distributions. However, two weapons, the Type 63 and the AK-47 seem to have higher mean scores as well as higher overall scores from their distributions. This is interesting as those weapons as seen above, were used the third and fourth least out of the 9 chosen primary weapons. This could be because the player either had no intention of trying to get a high score, as these weapons were rarely used in the 190 games, or he was using other weapons for the purpose of challenges. It is also of note that the two weapons with the highest mean scores deal much more damage per shot than other weapons, which can lead to more kills as well as a faster time to kill. Eliminations add a lot of score points, which is why these weapons have the highest mean scores of all 9 primary weapons, and can be proven with further data exploration.
 
 ## Task 4
+```{r}
+# Separating Result Column
+Games <- Games %>%
+  separate_wider_delim(
+      cols = Result, 
+      delim = "-", 
+      names = c("PlayerTeam", "OpposingTeam"),
+      cols_remove = FALSE
+    ) %>%
+    mutate(across(c(PlayerTeam, OpposingTeam), as.integer))
+```
+
+```{r}
+#
+Games <- Games %>%
+  mutate(PlayerTeamVict = ifelse(PlayerTeam > OpposingTeam, 1, 0),
+         PlayerTeamLoss = ifelse(PlayerTeam < OpposingTeam, 1, 0),
+         TeamTie = ifelse(PlayerTeam == OpposingTeam, 1, 0)
+         )
+
+Results <- Games %>%
+  summarise(
+    Won_Proportion = round(sum(PlayerTeamVict/nrow(Games)), 3),
+    Lost_Proportion = round(sum(PlayerTeamLoss/nrow(Games)), 3),
+    Tie_Proportion = round(sum(TeamTie/nrow(Games)), 3)
+  )
+kable(Results)
+```
 
 
 ## Task 5
