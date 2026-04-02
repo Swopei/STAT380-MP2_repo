@@ -3,7 +3,7 @@ title: "STAT380_MP2"
 author: 
 - name: Isaac Swope
 - name: Andrew Loiselle
-date: "2026-03-31"
+date: "2026-03-26"
 output: html_document
 ---
 
@@ -14,8 +14,18 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Front Matter
 ```{r}
 # Libraries
+library(dplyr)
+library(ggplot2)
 library(readxl)
+library(lubridate)
+library(knitr)
+library(patchwork)
+library(mdsr)
+
 # Functions
+countNA <- function(col){
+  return(sum(is.na(col)))
+}
 
 # Data
 games_url <- "https://raw.githubusercontent.com/Swopei/STAT380-MP2_repo/main/Data/CODGames2_mp.xlsx"
@@ -28,12 +38,161 @@ Games <- read_excel(games_tmp)
 
 ## Task 1
 
+The reason that we should not use the na.omit function for this dataset is because it will unnecessarily create bias in the dataset and remove rows with valuable data, greatly reducing the sample size. We would not want to remove an entire row because only one variable has missing data, which would lead to a large number of rows being dropped and change data observation later on. One solution is to count the number of NA's in each  row:
+
+```{r}
+Games <- Games %>%
+    mutate(na_count = rowSums(is.na(.)))
+```
+
 
 ## Task 2: Variable Exploration
+
+### Variable 1 - Score
+
+The variable Score is quantitative.
+
+```{r}
+countNA(Games$Score) #gets NA count
+```
+Score has 0 NA's
+
+```{r}
+Games_score <-Games %>%
+  summarize(
+    total = sum(Score),
+    mean = mean(Score),
+    min = min(Score),
+    Q1 = quantile(Score, .25),
+    median = median(Score),
+    Q3 = quantile(Score, .75),
+    max = max(Score)
+   
+    
+  )
+
+kable(Games_score)
+```
+
+```{r, fig.height=4, fig.width=9}
+score_box <- ggplot(data = Games,
+       mapping = aes(x = Score)) +
+  geom_boxplot() + 
+  labs(title = "Score Boxplot")
+
+score_hist <- ggplot(data = Games,
+       mapping = aes(x = Score)) +
+  geom_histogram(fill = "black", color = "grey") +
+  labs(title = "Score Histogram")
+
+score_box + score_hist
+```
+
+We can see that the eliminations variable has a positive skew, or right skew, with the mean and median being below the midpoint of the range of data. The mean is 2944.531 while the midpoint of the range is 3607.5, roughly 700 points lower. This lets us know that for most matches, this player is getting around 2700 - 3000 points, with fewer matches getting in the high range of scores.
+
+
+### Variable 2 - PrimaryWeapon
+
+The variable PrimaryWeapon is categorical
+
+```{r}
+levels(as.factor(Games$PrimaryWeapon)) #gets categories
+```
+
+PrimaryWeapon has 9 different categories, representing the most used weapon of a given match.
+
+```{r}
+countNA(Games$PrimaryWeapon) #gets NA count
+```
+
+Primary Weapon has 0 NA's
+
+```{r}
+Games_PW <- Games %>%
+  group_by(PrimaryWeapon) %>%
+  summarize(
+     count = sum(PrimaryWeapon == PrimaryWeapon),
+     percent = paste0(round(sum(PrimaryWeapon == PrimaryWeapon)/nrow(Games)*100, 2), "%")
+  )
+
+kable(Games_PW)
+
+ggplot(data = Games_PW,
+       mapping = aes(x = reorder(PrimaryWeapon, count), 
+                     y = count)) + 
+  geom_col() + 
+  coord_flip() + 
+  scale_y_continuous(breaks = seq(0, 50, by = 5)) +
+  labs(x = "Primary Weapon", 
+       y = "Count",
+       title = "Counts of Primary Weapons")
+```
+
+We can see that out of the nine different primary weapons, there were four that were used the majority of the time: M16, MP5, Pellington 703, and QBZ-83, combined being the primary weapon 168 times out of the 190 total matches. There were two that were chosen a moderate amount, and three that were only chosen a combined 9 times out of 190. This distribution of primary weapons can indicate that this player had a preference for these four weapons, or that these weapons are statistically better weapons overall for the different game modes.
+
+
+### Variable 3 - Damage
+
+The variable Damage is quantitative
+
+```{r}
+countNA(Games$Damage) #gets NA count
+```
+
+Damage has 0 NA's
+
+```{r}
+Games_damage <-Games %>%
+  summarize(
+    total = sum(Damage),
+    mean = mean(Damage),
+    min = min(Damage),
+    Q1 = quantile(Damage, .25),
+    median = median(Damage),
+    Q3 = quantile(Damage, .75),
+    max = max(Damage)
+   
+    
+  )
+
+kable(Games_damage)
+
+```
+
+```{r, fig.height=4, fig.width=9}
+damage_box <- ggplot(data = Games,
+       mapping = aes(x = Damage)) +
+  geom_boxplot() + 
+  labs(title = "Damage Boxplot")
+
+damage_hist <- ggplot(data = Games,
+       mapping = aes(x = Damage)) +
+  geom_histogram(fill = "black", color = "grey") +
+  labs(title = "Damage Histogram")
+
+damage_box + damage_hist
+```
+
+We can see that from the histogram, the data appears to be somewhat normal, with a bell curve-like shape, with the slightest right skew. From examining the boxplot, we can confirm this seeing that there is only one outlier which is the maximum value. Removing this one value could potentially make the data even more normal and could be proven with further investigation. Overall, we can see that this player was consistent with damage around 450 with less games having either a lot more or a lot less damage done.
 
 
 ## Task 3: Variable Relations
 
+I have chosen the Score and PrimaryWeapon variables to compare to see if certain weapons contributed to a higher score. Score is a quantitative Variable and PrimaryWeapon is a categorical variable. 
+
+```{r}
+ggplot(data = Games,
+       mapping = aes(x = PrimaryWeapon, y = Score)) +
+  geom_boxplot() +
+  coord_flip() +
+  labs(
+    x = "Primary Weapon",
+    y = "Score",
+    title = "Score Distribution by Primary Weapon"
+  )
+```
+
+As we can see from the visualization, most of the primary weapons have a very similar score with very similar individual distributions. However, two weapons, the Type 63 and the AK-47 seem to have higher mean scores as well as higher overall scores from their distributions. This is interesting as those weapons as seen above, were used the third and fourth least out of the 9 chosen primary weapons. This could be because the player either had no intention of trying to get a high score, as these weapons were rarely used in the 190 games, or he was using other weapons for the purpose of challenges. It is also of note that the two weapons with the highest mean scores deal much more damage per shot than other weapons, which can lead to more kills as well as a faster time to kill. Eliminations add a lot of score points, which is why these weapons have the highest mean scores of all 9 primary weapons, and can be proven with further data exploration.
 
 ## Task 4
 
