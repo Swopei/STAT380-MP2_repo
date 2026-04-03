@@ -209,7 +209,7 @@ Games <- Games %>%
 ```
 
 ```{r}
-#
+# Getting Proportions
 Games <- Games %>%
   mutate(PlayerTeamVict = ifelse(PlayerTeam > OpposingTeam, 1, 0),
          PlayerTeamLoss = ifelse(PlayerTeam < OpposingTeam, 1, 0),
@@ -226,4 +226,19 @@ kable(Results)
 ```
 
 
-## Task 5
+## Task 5: Inference Question
+
+How does `Eliminations` affect the odds of `PlayerTeamVict` when controlling for `GameType` and `Deaths`?
+
+```{r}
+Model <- glm(PlayerTeamVict ~ Eliminations + Deaths + GameType, 
+                   data = Games, 
+                   family = "binomial")
+summary(Model)
+
+exp(coef(Model))
+```
+
+For every additional elimination, the odds of the player's team winning is expected to increase by a factor of 1.075, while holding deaths and game type constant.
+
+
